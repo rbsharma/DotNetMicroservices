@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using PlatformService.Data;
+using PlatformService.SyncServices.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<IAppDbContext, AppDbContext>(options =>
 
 // Register Repositories for specific entities
 builder.Services.AddScoped<IPlatformRepository, PlatformRepository>();
+builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -38,5 +40,7 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 await PrepData.PrepPopulationAsync(app);
+
+Console.WriteLine($"CommandService Endpoint: {builder.Configuration["CommandServiceEndpoint"]}");
 
 app.Run();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PlatformService.Data;
 using PlatformService.Dtos;
 using PlatformService.Models;
+using PlatformService.SyncServices.Http;
 
 namespace PlatformService.Controllers
 {
@@ -12,11 +13,15 @@ namespace PlatformService.Controllers
 	{
 		private readonly IMapper _mapper;
 		private readonly IPlatformRepository _platformRepository;
+		private readonly ICommandDataClient _commandServiceDataClient;
 
-		public PlatformsController(IMapper mapper, IPlatformRepository platformRepository)
+		public PlatformsController(IMapper mapper, 
+			IPlatformRepository platformRepository,
+			ICommandDataClient commandServiceDataClient)
 		{
 			_mapper = mapper;
 			_platformRepository = platformRepository;
+			_commandServiceDataClient = commandServiceDataClient;
 		}
 
 		[HttpGet]
@@ -44,7 +49,7 @@ namespace PlatformService.Controllers
 		[HttpPost]
 		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		[ProducesResponseType<PlatformReadDto>(StatusCodes.Status201Created)]
-		public async Task<IActionResult> CreatePlatform([FromBody] PlatformCreateDto platformCreateDto)
+		public async Task<ActionResult<PlatformReadDto>> CreatePlatform([FromBody] PlatformCreateDto platformCreateDto)
 		{
 			if (platformCreateDto == null)
 			{
@@ -54,6 +59,16 @@ namespace PlatformService.Controllers
 			await _platformRepository.CreateAsync(platform);
 
 			var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
+
+			try
+			{
+				await _commandServiceDataClient.SendPlatformToCommandServiceAsync(platformReadDto);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"--> Could not send synchronously: {ex.Message}");
+			}
+
 			return CreatedAtAction(nameof(GetPlatformById), new { id = platformReadDto.Id }, platformReadDto);
 		}
 	}

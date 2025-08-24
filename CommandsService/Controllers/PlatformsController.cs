@@ -11,11 +11,11 @@ namespace CommandsService.Controllers
 			
 		}
 
-		[HttpGet]
-		public async Task<IActionResult> GetPlatforms()
+		[HttpPost]
+		public IActionResult TestInboundConnection()
 		{
-			Console.WriteLine($"--> Incoming request to {nameof(CommandsService)}.{nameof(PlatformsController)}.{nameof(GetPlatforms)}.");
-			return Ok(new { Message = "This is the PlatformsController!" });
+			Console.WriteLine($"--> Incoming request to {nameof(CommandsService)}.{nameof(PlatformsController)}.{nameof(TestInboundConnection)}.");
+			return Ok(new { Message = "Inbound test of PlatformsController!" });
 		}
 	}
 }
